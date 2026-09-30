@@ -28,6 +28,22 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             build
 
+      - name: Build HookCase
+        run: |
+          xcodebuild             -project HookCase-master/HookCase.xcodeproj             -scheme HookCase             -configuration Release             -derivedDataPath build-hookcase             CODE_SIGNING_ALLOWED=NO             CODE_SIGNING_REQUIRED=NO             build
+
+      - name: Package HookCase
+        run: |
+          KEXT="$(find build-hookcase -type d -name 'HookCase.kext' | head -1)"
+          test -d "$KEXT"
+          ditto -c -k --keepParent "$KEXT" HookCase.kext.zip
+
+      - name: Upload HookCase
+        uses: actions/upload-artifact@v4
+        with:
+          name: HookCase-kext
+          path: HookCase.kext.zip
+
       - name: Locate kext
         run: |
           find build -type d -name 'NootedGreen.kext' -print
