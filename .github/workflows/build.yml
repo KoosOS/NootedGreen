@@ -1,0 +1,45 @@
+name: Build NootedGreen
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build:
+    runs-on: macos-15-intel
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Show Xcode
+        run: |
+          xcodebuild -version
+          uname -m
+
+      - name: Build NootedGreen
+        run: |
+          xcodebuild \
+            -project NootedGreen.xcodeproj \
+            -scheme NootedGreen \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+      - name: Locate kext
+        run: |
+          find build -type d -name 'NootedGreen.kext' -print
+          test -d "$(find build -type d -name 'NootedGreen.kext' | head -1)"
+
+      - name: Package kext
+        run: |
+          KEXT="$(find build -type d -name 'NootedGreen.kext' | head -1)"
+          ditto -c -k --keepParent "$KEXT" NootedGreen.kext.zip
+
+      - name: Upload kext
+        uses: actions/upload-artifact@v4
+        with:
+          name: NootedGreen-kext
+          path: NootedGreen.kext.zip
